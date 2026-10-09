@@ -1,0 +1,11 @@
+WEB
+1
+http://localhost:8085/bond_rates_table.html
+
+Selection=EntirePage
+Formatting=All
+PreFormattedTextToColumns=True
+ConsecutiveDelimitersAsOne=True
+SingleBlockTextImport=False
+DisableDateRecognition=False
+DisableRedirections=False

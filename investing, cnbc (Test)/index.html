@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Live real-time U.S. Treasury Bond Rates and Yield Curve Dashboard with real-time updates for US10Y, US2Y, US5Y, US30Y and key financial benchmarks. Includes direct .xls and .csv file exports.">
+  <meta name="keywords" content="US10Y, US Treasury, Bond Yields, Live Bond Rates, Treasury Yield Curve, Fixed Income, Excel XLS Export, CSV Export">
+  <title>Live U.S. Treasury Bond Rates & Yield Curve Dashboard (.xls / .csv)</title>
+  
+  <!-- SheetJS local with CDN fallback for client-side .xls & .xlsx export -->
+  <script src="xlsx.full.min.js"></script>
+  <script>
+    if (typeof XLSX === 'undefined') {
+      document.write('<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"><\/script>');
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-primary: #090d16;
+      --bg-secondary: #0f172a;
+      --bg-card: rgba(18, 26, 45, 0.75);
+      --bg-card-hover: rgba(28, 39, 68, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(56, 189, 248, 0.25);
+      
+      --accent-cyan: #38bdf8;
+      --accent-blue: #3b82f6;
+      --accent-emerald: #10b981;
+      --accent-rose: #f43f5e;
+      --accent-amber: #f59e0b;
+      --accent-purple: #a855f7;
+      --accent-excel: #107c41;
+
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-color);
+      --shadow-glow: 0 0 35px -5px rgba(56, 189, 248, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 40%),
+        linear-gradient(180deg, #090d16 0%, #060910 100%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      line-height: 1.5;
+      padding: 24px 20px 60px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Top Navigation / Header */
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 28px;
+    }
+
+    .header-branding {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+    }
+
+    .brand-icon svg {
+      width: 26px;
+      height: 26px;
+      fill: #ffffff;
+    }
+
+    .brand-text h1 {
+      font-size: 1.65rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(120deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent-emerald);
+      letter-spacing: 0.02em;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-emerald);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent-emerald);
+      animation: pulse-dot 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .timestamp-box {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      background: rgba(15, 23, 42, 0.6);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+    }
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: var(--font-main);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
+    }
+
+    .action-btn.spinning svg {
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Export Format Specific Buttons */
+    .btn-xls {
+      background: linear-gradient(135deg, rgba(16, 124, 65, 0.4), rgba(16, 124, 65, 0.2));
+      border: 1px solid #107c41;
+      color: #34d399;
+    }
+
+    .btn-xls:hover {
+      background: linear-gradient(135deg, #107c41, #15803d);
+      border-color: #34d399;
+      color: #ffffff;
+      box-shadow: 0 0 20px rgba(16, 124, 65, 0.4);
+    }
+
+    .btn-csv {
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.4), rgba(2, 132, 199, 0.2));
+      border: 1px solid #0284c7;
+      color: #38bdf8;
+    }
+
+    .btn-csv:hover {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      border-color: #38bdf8;
+      color: #ffffff;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+    }
+
+    .btn-xlsx {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.3), rgba(37, 99, 235, 0.15));
+      border: 1px solid rgba(37, 99, 235, 0.4);
+      color: #60a5fa;
+    }
+
+    .btn-xlsx:hover {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border-color: #60a5fa;
+      color: #ffffff;
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-copy {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(168, 85, 247, 0.15));
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      color: #c084fc;
+    }
+
+    .btn-copy:hover {
+      background: linear-gradient(135deg, #9333ea, #7e22ce);
+      border-color: #c084fc;
+      color: #ffffff;
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+    }
+
+    .btn-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    /* Tab Switcher */
+    .tab-nav {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: var(--font-main);
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      color: #ffffff;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid var(--accent-cyan);
+    }
+
+    /* Hero Key Benchmark Cards */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: var(--radius-md);
+      padding: 22px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-card);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--border-glow);
+      box-shadow: var(--shadow-glow), var(--shadow-card);
+    }
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .metric-card:hover::before {
+      opacity: 1;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .card-symbol {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .card-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-top: 6px;
+    }
+
+    .card-rate-row {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin: 10px 0 14px;
+    }
+
+    .card-yield {
+      font-family: var(--font-mono);
+      font-size: 2.3rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: #ffffff;
+    }
+
+    .card-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .card-change.up {
+      color: var(--accent-emerald);
+      background: rgba(16, 185, 129, 0.12);
+    }
+
+    .card-change.down {
+      color: var(--accent-rose);
+      background: rgba(244, 63, 94, 0.12);
+    }
+
+    .card-change.unch {
+      color: var(--text-dim);
+      background: rgba(148, 163, 184, 0.1);
+    }
+
+    .card-footer-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.8rem;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .stat-val {
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    /* Yield Curve Chart Section */
+    .chart-section {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      padding: 24px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title span {
+      color: var(--accent-cyan);
+    }
+
+    .chart-stats-pill {
+      font-size: 0.85rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-color);
+      padding: 6px 14px;
+      border-radius: 999px;
+    }
+
+    .chart-container {
+      width: 100%;
+      height: 260px;
+      position: relative;
+    }
+
+    svg.yield-chart {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .chart-tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--accent-cyan);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      display: none;
+      z-index: 10;
+      transform: translate(-50%, -120%);
+    }
+
+    /* Rates Table Section */
+    .table-section {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      padding: 24px;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 32px;
+    }
+
+    .table-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .search-box {
+      position: relative;
+      min-width: 240px;
+    }
+
+    .search-box input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      padding: 8px 14px 8px 36px;
+      font-size: 0.85rem;
+      font-family: var(--font-main);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-box input:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      fill: var(--text-dim);
+    }
+
+    .filter-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: var(--font-main);
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent-cyan);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table.rates-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    table.rates-table th {
+      padding: 12px 16px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    table.rates-table td {
+      padding: 14px 16px;
+      font-size: 0.9rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+      white-space: nowrap;
+    }
+
+    table.rates-table tbody tr {
+      transition: background-color 0.15s ease;
+    }
+
+    table.rates-table tbody tr:hover {
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    /* Excel Spreadsheet Style Grid */
+    .spreadsheet-box {
+      background: #08101e;
+      border: 1px solid rgba(16, 124, 65, 0.4);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .excel-toolbar {
+      background: #0e1c31;
+      padding: 12px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .excel-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      color: #34d399;
+      font-size: 0.9rem;
+    }
+
+    table.excel-grid {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    table.excel-grid th {
+      background: #11223b;
+      color: #38bdf8;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 8px 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      text-align: left;
+    }
+
+    table.excel-grid td {
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 7px 12px;
+      white-space: nowrap;
+      color: #e2e8f0;
+    }
+
+    table.excel-grid tr:hover td {
+      background: rgba(56, 189, 248, 0.06);
+    }
+
+    table.excel-grid .row-num {
+      background: #0d1728;
+      color: #64748b;
+      text-align: center;
+      font-weight: 600;
+      width: 40px;
+    }
+
+    .mono-cell {
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+    }
+
+    .symbol-pill {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+    }
+
+    .yield-highlight {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #ffffff;
+    }
+
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(16, 185, 129, 0.5);
+      color: #ffffff;
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 48px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      border-top: 1px solid var(--border-color);
+      padding-top: 24px;
+    }
+
+    footer a {
+      color: var(--accent-cyan);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 16px 12px 40px;
+      }
+      .brand-text h1 {
+        font-size: 1.35rem;
+      }
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+      .table-section, .chart-section {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Top Header Navigation -->
+    <header id="main-header">
+      <div class="header-branding">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Live U.S. Treasury Bond Rates</h1>
+          <p>Real-Time Benchmark Yields & Yield Curve Analytics &bull; <strong>.xls / .csv Format</strong></p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="status-badge" id="live-indicator">
+          <div class="live-dot"></div>
+          <span>LIVE MARKET</span>
+        </div>
+        <div class="timestamp-box" id="last-updated">Updated: --:--:--</div>
+
+        <!-- Export .XLS (Requested format) -->
+        <button class="action-btn btn-xls" id="export-xls-header-btn" onclick="exportToXLS()" title="Download live rates in Microsoft Excel .xls format">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+          </svg>
+          <span>Export .XLS</span>
+        </button>
+
+        <!-- Export .CSV (Requested format) -->
+        <button class="action-btn btn-csv" id="export-csv-header-btn" onclick="exportToCSV()" title="Download live rates in .csv format (UTF-8 BOM)">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+          </svg>
+          <span>Export .CSV</span>
+        </button>
+
+        <!-- Export .XLSX -->
+        <button class="action-btn btn-xlsx" id="export-xlsx-header-btn" onclick="exportToXLSX()" title="Download live rates in Excel .xlsx format">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+          </svg>
+          <span>Export .XLSX</span>
+        </button>
+
+        <!-- Refresh Button -->
+        <button class="action-btn" id="refresh-btn" onclick="fetchLiveRates()">
+          <svg id="refresh-icon" class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+          </svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Tab View Navigation -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" id="tab-overview-btn" onclick="switchMainTab('overview')">
+        <span>📈</span> Dashboard & Yield Curve
+      </button>
+      <button class="tab-btn" id="tab-excel-btn" onclick="switchMainTab('spreadsheet')">
+        <span>📊</span> .XLS & .CSV Spreadsheet View (Full 14 Columns)
+      </button>
+    </nav>
+
+    <!-- SECTION 1: Standard Dashboard View -->
+    <div id="view-overview">
+      <!-- Key Benchmark Hero Cards -->
+      <section class="hero-grid" id="benchmark-cards">
+        
+        <!-- US10Y Card -->
+        <article class="metric-card" id="card-us10y">
+          <div class="card-top">
+            <div>
+              <span class="card-symbol">BENCHMARK 10Y</span>
+              <div class="card-name">U.S. 10 Year Treasury</div>
+            </div>
+          </div>
+          <div class="card-rate-row">
+            <div class="card-yield" id="hero-us10y-yield">--%</div>
+            <div class="card-change unch" id="hero-us10y-change">--</div>
+          </div>
+          <div class="card-footer-stats">
+            <div class="stat-item">
+              <span class="stat-label">Bond Price</span>
+              <span class="stat-val" id="hero-us10y-price">--</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Day Range</span>
+              <span class="stat-val" id="hero-us10y-range">--</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Coupon</span>
+              <span class="stat-val" id="hero-us10y-coupon">--</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Maturity Date</span>
+              <span class="stat-val" id="hero-us10y-maturity">--</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- US2Y Card -->
+        <article class="metric-card" id="card-us2y">
+          <div class="card-top">
+            <div>
+              <span class="card-symbol">SHORT-TERM 2Y</span>
+              <div class="card-name">U.S. 2 Year Treasury</div>
+            </div>
+          </div>
+          <div class="card-rate-row">
+            <div class="card-yield" id="hero-us2y-yield">--%</div>
+            <div class="card-change unch" id="hero-us2y-change">--</div>
+          </div>
+          <div class="card-footer-stats">
+            <div class="stat-item">
+              <span class="stat-label">Bond Price</span>
+              <span class="stat-val" id="hero-us2y-price">--</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Day Range</span>
+              <span class="stat-val" id="hero-us2y-range">--</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Coupon</span>
+              <span class="stat-val" id="hero-us2y-coupon">--</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Maturity Date</span>
+              <span class="stat-val" id="hero-us2y-maturity">--</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- US30Y Card -->
+        <article class="metric-card" id="card-us30y">
+          <div class="card-top">
+            <div>
+              <span class="card-symbol">LONG BOND 30Y</span>
+              <div class="card-name">U.S. 30 Year Treasury</div>
+            </div>
+          </div>
+          <div class="card-rate-row">
+            <div class="card-yield" id="hero-us30y-yield">--%</div>
+            <div class="card-change unch" id="hero-us30y-change">--</div>
+          </div>
+          <div class="card-footer-stats">
+            <div class="stat-item">
+              <span class="stat-label">Bond Price</span>
+              <span class="stat-val" id="hero-us30y-price">--</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Day Range</span>
+              <span class="stat-val" id="hero-us30y-range">--</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Coupon</span>
+              <span class="stat-val" id="hero-us30y-coupon">--</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Maturity Date</span>
+              <span class="stat-val" id="hero-us30y-maturity">--</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Yield Spread Card (10Y - 2Y) -->
+        <article class="metric-card" id="card-spread">
+          <div class="card-top">
+            <div>
+              <span class="card-symbol" style="color: var(--accent-purple); background: rgba(168, 85, 247, 0.1);">SPREAD 10Y - 2Y</span>
+              <div class="card-name">Yield Curve Slope</div>
+            </div>
+          </div>
+          <div class="card-rate-row">
+            <div class="card-yield" id="hero-spread-val" style="color: var(--accent-purple);">-- bps</div>
+            <div class="card-change unch" id="hero-spread-status">Normal</div>
+          </div>
+          <div class="card-footer-stats">
+            <div class="stat-item">
+              <span class="stat-label">10Y Yield</span>
+              <span class="stat-val" id="spread-10y">--%</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">2Y Yield</span>
+              <span class="stat-val" id="spread-2y">--%</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">30Y - 5Y Spread</span>
+              <span class="stat-val" id="spread-30y-5y">-- bps</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Inversion Check</span>
+              <span class="stat-val" id="spread-inversion">No</span>
+            </div>
+          </div>
+        </article>
+
+      </section>
+
+      <!-- Yield Curve Visualization Section -->
+      <section class="chart-section" id="yield-curve-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span>📈</span> U.S. Treasury Yield Curve (1M to 30Y)
+          </h2>
+          <div class="chart-stats-pill" id="curve-status-pill">Loading curve data...</div>
+        </div>
+        <div class="chart-container" id="curve-container">
+          <svg class="yield-chart" id="yield-curve-svg" viewBox="0 0 900 240" preserveAspectRatio="none">
+            <!-- Dynamically populated grid & curve path -->
+          </svg>
+          <div class="chart-tooltip" id="chart-tooltip"></div>
+        </div>
+      </section>
+
+      <!-- Full Rates Table Section -->
+      <section class="table-section" id="rates-table-section">
+        <div class="table-controls">
+          <h2 class="section-title">
+            <span>🏛️</span> Complete U.S. Treasury Rates
+          </h2>
+          
+          <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+            <div class="search-box">
+              <svg viewBox="0 0 24 24">
+                <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+              </svg>
+              <input type="text" id="search-input" placeholder="Search symbol or tenor..." oninput="filterTable()">
+            </div>
+
+            <div class="filter-pills">
+              <button class="filter-btn active" onclick="setFilter('ALL', this)">All</button>
+              <button class="filter-btn" onclick="setFilter('SHORT', this)">Short (<1Y)</button>
+              <button class="filter-btn" onclick="setFilter('MEDIUM', this)">Medium (2Y-7Y)</button>
+              <button class="filter-btn" onclick="setFilter('LONG', this)">Long (10Y-30Y)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="rates-table" id="bonds-table">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Benchmark Name</th>
+                <th>Live Yield</th>
+                <th>Change</th>
+                <th>Day Range</th>
+                <th>Bond Price</th>
+                <th>Coupon</th>
+                <th>Maturity</th>
+                <th>Time (EDT)</th>
+              </tr>
+            </thead>
+            <tbody id="bonds-tbody">
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 30px; color: var(--text-dim);">
+                  Fetching live quotes from market feed...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- SECTION 2: Dedicated .xls / .csv Spreadsheet Grid View -->
+    <div id="view-spreadsheet" style="display: none;">
+      <section class="table-section">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">
+              <span>📊</span> Live .XLS & .CSV Spreadsheet Grid
+            </h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
+              Live conversion of pandas DataFrame table into <strong>.xls (Excel BIFF8)</strong> and <strong>.csv (RFC-4180 with UTF-8 BOM)</strong>.
+            </p>
+          </div>
+
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <!-- Download Direct Server Files -->
+            <a href="bond_rates.xls" class="action-btn btn-xls" download title="Download the pre-generated Excel .xls file">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+              </svg>
+              <span>Download bond_rates.xls</span>
+            </a>
+            
+            <a href="bond_rates.csv" class="action-btn btn-csv" download title="Download the pre-generated .csv file">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+              </svg>
+              <span>Download bond_rates.csv</span>
+            </a>
+
+            <button class="action-btn btn-copy" onclick="copyTableForExcel()" title="Copy entire table to clipboard for Ctrl+V into Excel">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+              </svg>
+              <span>Copy for Excel</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="spreadsheet-box">
+          <div class="excel-toolbar">
+            <div class="excel-badge">
+              <span>📗</span> 
+              <span>Sheet: "US Treasury Rates" (11 Rows &times; 14 Columns) &bull; Formats: .xls / .csv</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="action-btn btn-xls" onclick="exportToXLS()" style="padding: 5px 10px; font-size: 0.78rem;">Live .XLS</button>
+              <button class="action-btn btn-csv" onclick="exportToCSV()" style="padding: 5px 10px; font-size: 0.78rem;">Live .CSV</button>
+              <button class="action-btn btn-xlsx" onclick="exportToXLSX()" style="padding: 5px 10px; font-size: 0.78rem;">Live .XLSX</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="excel-grid" id="excel-full-grid">
+              <thead>
+                <tr>
+                  <th class="row-num">#</th>
+                  <th>Symbol</th>
+                  <th>Benchmark Name</th>
+                  <th>Yield (%)</th>
+                  <th>Yield String</th>
+                  <th>Change</th>
+                  <th>Change (%)</th>
+                  <th>Day Low</th>
+                  <th>Day High</th>
+                  <th>Bond Price</th>
+                  <th>Coupon (%)</th>
+                  <th>Maturity Date</th>
+                  <th>Exchange</th>
+                  <th>Last Updated (EDT)</th>
+                  <th>Data Fetched At</th>
+                </tr>
+              </thead>
+              <tbody id="excel-grid-tbody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <div>
+        Source Feed: CNBC Real-Time Quote Service (Tradeweb / US Treasury Benchmarks) &bull; Refreshes automatically every 15s.
+      </div>
+      <div>
+        <a href="bond_rates.xls" download>bond_rates.xls</a> &bull; 
+        <a href="bond_rates.csv" download>bond_rates.csv</a> &bull; 
+        <a href="bond_rates.xlsx" download>bond_rates.xlsx</a> &bull; 
+        <a href="bond_rates_table.html" target="_blank">bond_rates_table.html</a> &bull; 
+        <a href="https://www.cnbc.com/quotes/US10Y" target="_blank" rel="noopener noreferrer">CNBC US10Y</a>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+    const SYMBOLS = [
+      "US1M", "US3M", "US6M", "US1Y",
+      "US2Y", "US3Y", "US5Y", "US7Y",
+      "US10Y", "US20Y", "US30Y"
+    ];
+
+    let cachedQuotes = [];
+    let currentFilter = 'ALL';
+
+    function switchMainTab(tab) {
+      const viewOverview = document.getElementById('view-overview');
+      const viewSpreadsheet = document.getElementById('view-spreadsheet');
+      const tabOverviewBtn = document.getElementById('tab-overview-btn');
+      const tabExcelBtn = document.getElementById('tab-excel-btn');
+
+      if (tab === 'overview') {
+        viewOverview.style.display = 'block';
+        viewSpreadsheet.style.display = 'none';
+        tabOverviewBtn.classList.add('active');
+        tabExcelBtn.classList.remove('active');
+      } else {
+        viewOverview.style.display = 'none';
+        viewSpreadsheet.style.display = 'block';
+        tabOverviewBtn.classList.remove('active');
+        tabExcelBtn.classList.add('active');
+      }
+    }
+
+    function showToast(message, isSuccess = true) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.style.borderColor = isSuccess ? 'rgba(16, 185, 129, 0.5)' : 'rgba(244, 63, 94, 0.5)';
+      toast.innerHTML = `
+        <span style="font-size: 1.2rem;">${isSuccess ? '✅' : '❌'}</span>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      
+      requestAnimationFrame(() => toast.classList.add('show'));
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 400);
+      }, 3500);
+    }
+
+    async function fetchLiveRates() {
+      const refreshBtn = document.getElementById('refresh-btn');
+      refreshBtn.classList.add('spinning');
+
+      const symbolsParam = SYMBOLS.join('|');
+      const url = `https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol?symbols=${symbolsParam}&requestMethod=itv&noform=1&partnerId=2&fund=1&exthrs=1&output=json`;
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        
+        const quotes = data?.FormattedQuoteResult?.FormattedQuote || [];
+        cachedQuotes = quotes;
+        
+        renderHeroCards(quotes);
+        renderYieldCurve(quotes);
+        renderTable(quotes);
+        renderExcelGrid(quotes);
+
+        const now = new Date();
+        document.getElementById('last-updated').innerText = `Updated: ${now.toLocaleTimeString()}`;
+      } catch (err) {
+        console.error('Fetch error:', err);
+        document.getElementById('last-updated').innerText = `Update error (retrying...)`;
+      } finally {
+        setTimeout(() => refreshBtn.classList.remove('spinning'), 500);
+      }
+    }
+
+    function parseYield(str) {
+      if (!str) return null;
+      const num = parseFloat(str.replace('%', ''));
+      return isNaN(num) ? null : num;
+    }
+
+    function renderHeroCards(quotes) {
+      const q10Y = quotes.find(q => q.symbol === 'US10Y');
+      const q2Y = quotes.find(q => q.symbol === 'US2Y');
+      const q30Y = quotes.find(q => q.symbol === 'US30Y');
+      const q5Y = quotes.find(q => q.symbol === 'US5Y');
+
+      if (q10Y) populateHeroCard('us10y', q10Y);
+      if (q2Y) populateHeroCard('us2y', q2Y);
+      if (q30Y) populateHeroCard('us30y', q30Y);
+
+      // Calculate Spread (10Y - 2Y)
+      if (q10Y && q2Y) {
+        const y10 = parseYield(q10Y.last);
+        const y2 = parseYield(q2Y.last);
+        if (y10 !== null && y2 !== null) {
+          const spreadBps = ((y10 - y2) * 100).toFixed(1);
+          const spreadValEl = document.getElementById('hero-spread-val');
+          const spreadStatusEl = document.getElementById('hero-spread-status');
+
+          spreadValEl.innerText = `${spreadBps > 0 ? '+' : ''}${spreadBps} bps`;
+          
+          if (spreadBps < 0) {
+            spreadStatusEl.innerText = 'Inverted ⚠️';
+            spreadStatusEl.className = 'card-change down';
+            document.getElementById('spread-inversion').innerText = 'Yes (Recession Signal)';
+            document.getElementById('spread-inversion').style.color = 'var(--accent-rose)';
+          } else {
+            spreadStatusEl.innerText = 'Upward Sloping';
+            spreadStatusEl.className = 'card-change up';
+            document.getElementById('spread-inversion').innerText = 'Normal';
+            document.getElementById('spread-inversion').style.color = 'var(--accent-emerald)';
+          }
+
+          document.getElementById('spread-10y').innerText = q10Y.last;
+          document.getElementById('spread-2y').innerText = q2Y.last;
+
+          if (q30Y && q5Y) {
+            const y30 = parseYield(q30Y.last);
+            const y5 = parseYield(q5Y.last);
+            if (y30 !== null && y5 !== null) {
+              const s30_5 = ((y30 - y5) * 100).toFixed(1);
+              document.getElementById('spread-30y-5y').innerText = `${s30_5 > 0 ? '+' : ''}${s30_5} bps`;
+            }
+          }
+        }
+      }
+    }
+
+    function populateHeroCard(prefix, q) {
+      document.getElementById(`hero-${prefix}-yield`).innerText = q.last || '--%';
+      
+      const changeEl = document.getElementById(`hero-${prefix}-change`);
+      const changeVal = q.change || '0';
+      const changePct = q.change_pct || '0%';
+      const isUp = changeVal.startsWith('+');
+      const isDown = changeVal.startsWith('-');
+
+      changeEl.innerText = `${changeVal} (${changePct})`;
+      changeEl.className = `card-change ${isUp ? 'up' : isDown ? 'down' : 'unch'}`;
+
+      document.getElementById(`hero-${prefix}-price`).innerText = q.bond_last_price || '--';
+      document.getElementById(`hero-${prefix}-range`).innerText = `${q.low || '--'} - ${q.high || '--'}`;
+      document.getElementById(`hero-${prefix}-coupon`).innerText = q.coupon || '--';
+      document.getElementById(`hero-${prefix}-maturity`).innerText = q.maturity_date || '--';
+    }
+
+    function renderYieldCurve(quotes) {
+      const svg = document.getElementById('yield-curve-svg');
+      const tooltip = document.getElementById('chart-tooltip');
+      const curveData = [];
+
+      SYMBOLS.forEach(sym => {
+        const q = quotes.find(item => item.symbol === sym);
+        if (q && q.last) {
+          const val = parseYield(q.last);
+          if (val !== null) {
+            curveData.push({ symbol: sym, tenor: sym.replace('US', ''), yield: val, raw: q });
+          }
+        }
+      });
+
+      if (curveData.length === 0) return;
+
+      const yields = curveData.map(d => d.yield);
+      const minYield = Math.floor(Math.min(...yields) * 10) / 10 - 0.2;
+      const maxYield = Math.ceil(Math.max(...yields) * 10) / 10 + 0.2;
+
+      document.getElementById('curve-status-pill').innerText = 
+        `Yield Range: ${minYield.toFixed(2)}% — ${maxYield.toFixed(2)}% | Data Points: ${curveData.length}`;
+
+      const svgWidth = 900;
+      const svgHeight = 240;
+      const padLeft = 60;
+      const padRight = 40;
+      const padTop = 30;
+      const padBottom = 40;
+
+      const plotWidth = svgWidth - padLeft - padRight;
+      const plotHeight = svgHeight - padTop - padBottom;
+
+      const stepX = plotWidth / (curveData.length - 1);
+
+      // Points calculation
+      const points = curveData.map((d, i) => {
+        const x = padLeft + i * stepX;
+        const y = padTop + plotHeight - ((d.yield - minYield) / (maxYield - minYield)) * plotHeight;
+        return { ...d, x, y };
+      });
+
+      // SVG path
+      let pathD = `M ${points[0].x} ${points[0].y}`;
+      for (let i = 1; i < points.length; i++) {
+        const prev = points[i - 1];
+        const curr = points[i];
+        const cp1x = prev.x + (curr.x - prev.x) / 2;
+        const cp1y = prev.y;
+        const cp2x = prev.x + (curr.x - prev.x) / 2;
+        const cp2y = curr.y;
+        pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${curr.x} ${curr.y}`;
+      }
+
+      // Gradient area under curve
+      const areaD = `${pathD} L ${points[points.length - 1].x} ${padTop + plotHeight} L ${points[0].x} ${padTop + plotHeight} Z`;
+
+      // Build gridlines
+      let gridSvg = `
+        <defs>
+          <linearGradient id="curveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#38bdf8"/>
+            <stop offset="50%" stop-color="#3b82f6"/>
+            <stop offset="100%" stop-color="#a855f7"/>
+          </linearGradient>
+          <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="rgba(56, 189, 248, 0.35)"/>
+            <stop offset="100%" stop-color="rgba(56, 189, 248, 0.0)"/>
+          </linearGradient>
+        </defs>
+      `;
+
+      // Horizontal grid lines
+      const steps = 4;
+      for (let i = 0; i <= steps; i++) {
+        const val = minYield + ((maxYield - minYield) / steps) * i;
+        const y = padTop + plotHeight - (i / steps) * plotHeight;
+        gridSvg += `
+          <line x1="${padLeft}" y1="${y}" x2="${svgWidth - padRight}" y2="${y}" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4"/>
+          <text x="${padLeft - 12}" y="${y + 4}" fill="#64748b" font-size="11" font-family="'JetBrains Mono', monospace" text-anchor="end">${val.toFixed(2)}%</text>
+        `;
+      }
+
+      // Curve & Area
+      let contentSvg = `
+        <path d="${areaD}" fill="url(#areaGradient)" />
+        <path d="${pathD}" fill="none" stroke="url(#curveGradient)" stroke-width="3.5" stroke-linecap="round" />
+      `;
+
+      // Circles & X-labels
+      points.forEach(p => {
+        contentSvg += `
+          <line x1="${p.x}" y1="${padTop + plotHeight}" x2="${p.x}" y2="${p.y}" stroke="rgba(56, 189, 248, 0.15)" stroke-dasharray="2"/>
+          <circle cx="${p.x}" cy="${p.y}" r="6" fill="#090d16" stroke="#38bdf8" stroke-width="2.5" class="chart-point" data-sym="${p.symbol}" data-val="${p.yield.toFixed(3)}%" style="cursor: pointer;"/>
+          <text x="${p.x}" y="${padTop + plotHeight + 22}" fill="#94a3b8" font-size="12" font-weight="600" font-family="'Outfit', sans-serif" text-anchor="middle">${p.tenor}</text>
+        `;
+      });
+
+      svg.innerHTML = gridSvg + contentSvg;
+
+      // Tooltip interaction
+      const circles = svg.querySelectorAll('.chart-point');
+      circles.forEach(circle => {
+        circle.addEventListener('mouseenter', (e) => {
+          circle.setAttribute('r', '8');
+          circle.setAttribute('fill', '#38bdf8');
+          const sym = circle.getAttribute('data-sym');
+          const val = circle.getAttribute('data-val');
+          
+          tooltip.style.display = 'block';
+          tooltip.innerHTML = `<strong>${sym}</strong>: <span style="color: #38bdf8;">${val}</span>`;
+          
+          const rect = circle.getBoundingClientRect();
+          const containerRect = document.getElementById('curve-container').getBoundingClientRect();
+          tooltip.style.left = `${rect.left - containerRect.left + 5}px`;
+          tooltip.style.top = `${rect.top - containerRect.top}px`;
+        });
+
+        circle.addEventListener('mouseleave', () => {
+          circle.setAttribute('r', '6');
+          circle.setAttribute('fill', '#090d16');
+          tooltip.style.display = 'none';
+        });
+      });
+    }
+
+    function renderTable(quotes) {
+      const tbody = document.getElementById('bonds-tbody');
+      const searchTerm = document.getElementById('search-input').value.toLowerCase();
+
+      let filtered = quotes.filter(q => {
+        const sym = (q.symbol || '').toLowerCase();
+        const name = (q.name || '').toLowerCase();
+        const matchesSearch = sym.includes(searchTerm) || name.includes(searchTerm);
+
+        if (!matchesSearch) return false;
+
+        if (currentFilter === 'SHORT') {
+          return ['US1M', 'US3M', 'US6M', 'US1Y'].includes(q.symbol);
+        } else if (currentFilter === 'MEDIUM') {
+          return ['US2Y', 'US3Y', 'US5Y', 'US7Y'].includes(q.symbol);
+        } else if (currentFilter === 'LONG') {
+          return ['US10Y', 'US20Y', 'US30Y'].includes(q.symbol);
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 24px; color: var(--text-dim);">
+              No matching bonds found.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(q => {
+        const changeVal = q.change || '0';
+        const changePct = q.change_pct || '0%';
+        const isUp = changeVal.startsWith('+');
+        const isDown = changeVal.startsWith('-');
+        const changeClass = isUp ? 'up' : isDown ? 'down' : 'unch';
+
+        return `
+          <tr>
+            <td><span class="symbol-pill">${q.symbol}</span></td>
+            <td><strong>${q.name || '--'}</strong></td>
+            <td class="mono-cell yield-highlight">${q.last || '--'}</td>
+            <td>
+              <span class="card-change ${changeClass}">
+                ${changeVal} (${changePct})
+              </span>
+            </td>
+            <td class="mono-cell" style="color: var(--text-muted);">${q.low || '--'} - ${q.high || '--'}</td>
+            <td class="mono-cell">${q.bond_last_price || '--'}</td>
+            <td class="mono-cell">${q.coupon || '--'}</td>
+            <td class="mono-cell">${q.maturity_date || '--'}</td>
+            <td class="mono-cell" style="color: var(--text-dim);">${q.last_timedate || '--'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderExcelGrid(quotes) {
+      const tbody = document.getElementById('excel-grid-tbody');
+      if (!quotes || !quotes.length) return;
+
+      const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 19);
+
+      tbody.innerHTML = quotes.map((q, idx) => {
+        const yieldVal = q.last ? parseFloat(q.last.replace('%', '')) : null;
+        const changeVal = (q.change && q.change !== 'UNCH') ? parseFloat(q.change) : 0;
+        const priceVal = q.bond_last_price ? parseFloat(q.bond_last_price) : null;
+
+        return `
+          <tr>
+            <td class="row-num">${idx + 1}</td>
+            <td><strong style="color: #38bdf8;">${q.symbol || ''}</strong></td>
+            <td>${q.name || ''}</td>
+            <td style="color: #ffffff; font-weight: 700;">${yieldVal !== null ? yieldVal.toFixed(3) : ''}</td>
+            <td>${q.last || ''}</td>
+            <td style="color: ${changeVal >= 0 ? '#34d399' : '#f43f5e'};">${changeVal}</td>
+            <td style="color: ${changeVal >= 0 ? '#34d399' : '#f43f5e'};">${q.change_pct || ''}</td>
+            <td>${q.low || ''}</td>
+            <td>${q.high || ''}</td>
+            <td>${priceVal !== null ? priceVal : ''}</td>
+            <td>${q.coupon || ''}</td>
+            <td>${q.maturity_date || ''}</td>
+            <td>${q.exchange || ''}</td>
+            <td>${q.last_timedate || ''}</td>
+            <td style="color: #64748b;">${nowStr}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function setFilter(filterType, btn) {
+      currentFilter = filterType;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderTable(cachedQuotes);
+    }
+
+    function filterTable() {
+      renderTable(cachedQuotes);
+    }
+
+    /* ==========================================
+       .XLS / .CSV / .XLSX EXPORT FUNCTIONS
+       ========================================== */
+
+    function getExportRows() {
+      const dataToExport = cachedQuotes.length > 0 ? cachedQuotes : [];
+      const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 19);
+      
+      return dataToExport.map(q => {
+        const yieldVal = q.last ? parseFloat(q.last.replace('%', '')) : null;
+        const changeVal = (q.change && q.change !== 'UNCH') ? parseFloat(q.change) : 0;
+        const priceVal = q.bond_last_price ? parseFloat(q.bond_last_price) : null;
+
+        return {
+          "Symbol": q.symbol || "",
+          "Benchmark Name": q.name || "",
+          "Yield (%)": yieldVal,
+          "Yield String": q.last || "",
+          "Change": changeVal,
+          "Change (%)": q.change_pct || "",
+          "Day Low": q.low || "",
+          "Day High": q.high || "",
+          "Bond Price": priceVal,
+          "Coupon (%)": q.coupon || "",
+          "Maturity Date": q.maturity_date || "",
+          "Exchange": q.exchange || "",
+          "Last Updated (EDT)": q.last_timedate || "",
+          "Data Fetched At": nowStr
+        };
+      });
+    }
+
+    // 1. Export .XLS (Excel 97-2003 BIFF8 Format)
+    function exportToXLS() {
+      const rows = getExportRows();
+      if (!rows.length) {
+        showToast("No data to export", false);
+        return;
+      }
+
+      if (typeof XLSX === 'undefined') {
+        showToast("SheetJS not loaded, falling back to CSV", false);
+        exportToCSV();
+        return;
+      }
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const colWidths = Object.keys(rows[0]).map(key => {
+        let maxLen = key.length;
+        rows.forEach(r => {
+          const val = r[key] ? String(r[key]) : "";
+          if (val.length > maxLen) maxLen = val.length;
+        });
+        return { wch: Math.min(maxLen + 4, 30) };
+      });
+      worksheet["!cols"] = colWidths;
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "US Treasury Rates");
+
+      // BIFF8 .xls generation
+      const biffData = XLSX.write(workbook, { bookType: "biff8", type: "array" });
+      const blob = new Blob([new Uint8Array(biffData)], { type: "application/vnd.ms-excel" });
+      const nowStr = new Date().toISOString().slice(0, 10);
+      const filename = `US_Treasury_Bond_Rates_${nowStr}.xls`;
+
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+
+      showToast(`Exported ${filename} (.xls) successfully!`);
+    }
+
+    // 2. Export .CSV (RFC-4180 with UTF-8 BOM)
+    function exportToCSV() {
+      const rows = getExportRows();
+      if (!rows.length) {
+        showToast("No data to export", false);
+        return;
+      }
+
+      const headers = Object.keys(rows[0]);
+      let csvContent = "\uFEFF"; // UTF-8 BOM for Excel compatibility
+
+      // Header row
+      csvContent += headers.map(h => `"${h}"`).join(",") + "\r\n";
+
+      // Data rows
+      rows.forEach(row => {
+        const line = headers.map(header => {
+          let cell = row[header] === null || row[header] === undefined ? "" : String(row[header]);
+          cell = cell.replace(/"/g, '""');
+          return `"${cell}"`;
+        }).join(",");
+        csvContent += line + "\r\n";
+      });
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const nowStr = new Date().toISOString().slice(0, 10);
+      const filename = `US_Treasury_Bond_Rates_${nowStr}.csv`;
+      
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+
+      showToast(`Exported ${filename} (.csv) successfully!`);
+    }
+
+    // 3. Export .XLSX (Modern Excel OpenXML)
+    function exportToXLSX() {
+      const rows = getExportRows();
+      if (!rows.length) {
+        showToast("No data to export", false);
+        return;
+      }
+
+      if (typeof XLSX === 'undefined') {
+        showToast("SheetJS not ready. Falling back to CSV export.", false);
+        exportToCSV();
+        return;
+      }
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const colWidths = Object.keys(rows[0]).map(key => {
+        let maxLen = key.length;
+        rows.forEach(r => {
+          const val = r[key] ? String(r[key]) : "";
+          if (val.length > maxLen) maxLen = val.length;
+        });
+        return { wch: Math.min(maxLen + 4, 30) };
+      });
+      worksheet["!cols"] = colWidths;
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "US Treasury Rates");
+
+      const nowStr = new Date().toISOString().slice(0, 10);
+      const filename = `US_Treasury_Bond_Rates_${nowStr}.xlsx`;
+
+      XLSX.writeFile(workbook, filename);
+      showToast(`Exported ${filename} (.xlsx) successfully!`);
+    }
+
+    // 4. Copy TSV directly for Excel Paste (Ctrl+V)
+    function copyTableForExcel() {
+      const rows = getExportRows();
+      if (!rows.length) {
+        showToast("No data to copy", false);
+        return;
+      }
+
+      const headers = Object.keys(rows[0]);
+      let tsv = headers.join("\t") + "\n";
+
+      rows.forEach(row => {
+        tsv += headers.map(h => row[h] === null || row[h] === undefined ? "" : String(row[h])).join("\t") + "\n";
+      });
+
+      navigator.clipboard.writeText(tsv).then(() => {
+        showToast("Copied table to clipboard! Press Ctrl+V in Excel.");
+      }).catch(err => {
+        showToast("Could not copy to clipboard", false);
+      });
+    }
+
+    // Initial load
+    fetchLiveRates();
+
+    // Auto-refresh every 15 seconds
+    setInterval(fetchLiveRates, 15000);
+  </script>
+</body>
+</html>

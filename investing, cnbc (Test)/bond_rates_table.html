@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>U.S. Treasury Bond Rates - .xls / .csv Spreadsheet View</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #090d16;
+            color: #f8fafc;
+            font-family: 'Outfit', sans-serif;
+            padding: 30px 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        h1 {
+            margin: 0;
+            font-size: 1.6rem;
+            color: #38bdf8;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-xls {
+            background: #107c41;
+            color: white;
+        }
+        .btn-xls:hover {
+            background: #15803d;
+        }
+        .btn-csv {
+            background: #0284c7;
+            color: white;
+        }
+        .btn-csv:hover {
+            background: #0369a1;
+        }
+        .btn-xlsx {
+            background: #2563eb;
+            color: white;
+        }
+        .btn-xlsx:hover {
+            background: #1d4ed8;
+        }
+        .table-wrap {
+            overflow-x: auto;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px;
+        }
+        table.excel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+        table.excel-table th {
+            background: rgba(30, 41, 59, 0.9);
+            color: #38bdf8;
+            padding: 12px 14px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+        table.excel-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            white-space: nowrap;
+        }
+        table.excel-table tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>📊 U.S. Treasury Bond Rates — .xls & .csv Data</h1>
+                <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 4px;">Updated live at 2026-10-09 11:57:21</p>
+            </div>
+            <div class="btn-group">
+                <a href="bond_rates.xls" class="btn btn-xls" download>📥 Download .XLS</a>
+                <a href="bond_rates.csv" class="btn btn-csv" download>📥 Download .CSV</a>
+                <a href="bond_rates.xlsx" class="btn btn-xlsx" download>📥 Download .XLSX</a>
+                <a href="index.html" class="btn" style="background: rgba(255,255,255,0.1); color: #fff;">📈 Open Live Dashboard</a>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table class="dataframe excel-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Symbol</th>
+      <th>Benchmark Name</th>
+      <th>Yield (%)</th>
+      <th>Yield String</th>
+      <th>Change</th>
+      <th>Change (%)</th>
+      <th>Day Low</th>
+      <th>Day High</th>
+      <th>Bond Price</th>
+      <th>Coupon (%)</th>
+      <th>Maturity Date</th>
+      <th>Exchange</th>
+      <th>Last Updated (EDT)</th>
+      <th>Data Fetched At</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>US1M</td>
+      <td>U.S. 1 Month Treasury</td>
+      <td>4.038</td>
+      <td>4.038%</td>
+      <td>0.005</td>
+      <td>+0.124%</td>
+      <td>4.03%</td>
+      <td>4.045%</td>
+      <td>3.9700</td>
+      <td>0.00%</td>
+      <td>2026-11-10</td>
+      <td>Tradeweb</td>
+      <td>2:23 AM EDT</td>
+      <td>2026-10-09 11:57:21</td>
+    </tr>
+    <tr>
+      <td>US3M</td>
+      <td>U.S. 3 Month Treasury</td>
+      <td>4.167</td>
+      <td>4.167%</td>
+      <td>0.016</td>
+      <td>+0.3854%</td>
+      <td>4.152%</td>
+      <td>4.25%</td>
+      <td>4.0700</td>
+      <td>0.00%</td>
+      <td>2027-01-07</td>
+      <td>Tradeweb</td>
+      <td>2:25 AM EDT</td>
+      <td>2026-10-09 11:57:21</td>
+    </tr>
+    <tr>
+      <td>US6M</td>
+      <td>U.S. 6 Month Treasury</td>
+      <td>4.335</td>
+      <td>4.335%</td>
+      <td>0.027</td>
+      <td>+0.6267%</td>
+      <td>4.322%</td>
+      <td>4.34%</td>
+      <td>4.1875</td>
+      <td>0.00%</td>
+      <td>2027-04-08</td>
+      <td>Tradeweb</td>
+      <td>2:25 AM EDT</td>
+      <td>2026-10-09 11:57:21</td>
+    </tr>
+    <tr>
+      <td>US1Y</td>
+      <td>U.S. 1 Year Treasury</td>
+      <td>4.459</td>
+      <td>4.459%</td>
+      <td>0.031</td>
+      <td>+0.7001%</td>
+      <td>4.44%</td>
+      <td>4.459%</td>
+      <td>4.2600</td>
+      <td>0.00%</td>
+      <td>2027-09-30</td>
+      <td>Tradeweb</td>
+      <td>1:59 AM EDT</td>
+      <td>2026-10-09 11:57:21</td>
+    </tr>
+    <tr>
+      <td>US2Y</td>
+      <td>U.S. 2 Year Treasury</td>
+      <td>4.768</td>
+      <td>4.768%</td>
+      <td>0.012</td>
+      <td>-0.0234%</td>
+      <td>4.747%</td>
+      <td>4.77%</td>
+      <td>99.9648</td>
+      <td>4.75%</td>
+      <td>2028-09-30</td>
+      <td>Tradeweb</td>
+      <td>2:27 AM EDT</td>
+      <td>2026-10-09 11:57:21</td>
+    </tr>
+    <tr>
+      <td>US3Y</td>
+      <td>U.S. 3 Year Treasury</td>
+      <td>4.896</td>
+      <td>4.896%</td>
+      <td>0.007</td>
+      <td>+0.1432%</td>
+      <td>4.874%</td>
+      <td>4.899%</td>
+      <td>99.9414</td>
+      <td>4.875%</td>
+      <td>2029-10-15</td>
+      <td>Tradeweb</td>
+      <td>2:27 AM EDT</td>
+      <td>2026-10-09 11:57:21</td>
+    </tr>
+    <tr>
+      <td>US5Y</td>
+      <td>U.S. 5 Year Treasury</td>
+      <td>5.000</td>
+      <td>5.00%</td>
+      <td>0.009</td>
+      <td>+0.1803%</td>
+      <td>4.974%</td>
+      <td>5.00%</td>
+      <td>100.0000</td>
+      <td>5.00%</td>
+      <td>2031-09-30</td>
+      <td>Tradeweb</td>
+      <td>2:27 AM EDT</td>
+      <td>2026-10-09 11:57:21</td>
+    </tr>
+    <tr>
+      <td>US7Y</td>
+      <td>U.S. 7 Year Treasury</td>
+      <td>5.121</td>
+      <td>5.121%</td>
+      <td>0.010</td>
+      <td>+0.1957%</td>
+      <td>5.097%</td>
+      <td>5.124%</td>
+      <td>99.2969</td>
+      <td>5.00%</td>
+      <td>2033-09-30</td>
+      <td>Tradeweb</td>
+      <td>2:26 AM EDT</td>
+      <td>2026-10-09 11:57:21</td>
+    </tr>
+    <tr>
+      <td>US10Y</td>
+      <td>U.S. 10 Year Treasury</td>
+      <td>5.244</td>
+      <td>5.244%</td>
+      <td>0.011</td>
+      <td>+0.2102%</td>
+      <td>5.219%</td>
+      <td>5.244%</td>
+      <td>95.2813</td>
+      <td>4.625%</td>
+      <td>2036-08-15</td>
+      <td>Tradeweb</td>
+      <td>2:25 AM EDT</td>
+      <td>2026-10-09 11:57:21</td>
+    </tr>
+    <tr>
+      <td>US20Y</td>
+      <td>U.S. 20 Year Treasury</td>
+      <td>5.670</td>
+      <td>5.67%</td>
+      <td>0.018</td>
+      <td>+0.3185%</td>
+      <td>5.644%</td>
+      <td>5.67%</td>
+      <td>93.5469</td>
+      <td>5.125%</td>
+      <td>2046-08-15</td>
+      <td>Tradeweb</td>
+      <td>2:27 AM EDT</td>
+      <td>2026-10-09 11:57:21</td>
+    </tr>
+    <tr>
+      <td>US30Y</td>
+      <td>U.S. 30 Year Treasury</td>
+      <td>5.623</td>
+      <td>5.623%</td>
+      <td>0.016</td>
+      <td>+0.2854%</td>
+      <td>5.601%</td>
+      <td>5.624%</td>
+      <td>92.8281</td>
+      <td>5.125%</td>
+      <td>2056-08-15</td>
+      <td>Tradeweb</td>
+      <td>2:27 AM EDT</td>
+      <td>2026-10-09 11:57:21</td>
+    </tr>
+  </tbody>
+</table>
+        </div>
+    </div>
+</body>
+</html>
